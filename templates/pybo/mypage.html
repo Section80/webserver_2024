@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load pybo_filter %}
+{% block content %}
+
+
+<div class="container my-3">
+    <h2 class="border-bottom py-2">마이페이지</h2>
+
+    <form method="get" class="get-form" action="{% url 'common:change_password' %}">
+        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+    </form>
+
+    <h4 class="border-bottom py-2">작성한 질문</h4>
+    <table class="table">
+        <thead>
+        <tr class="text-center thead-dark">
+            <th>번호</th>
+            <th>추천</th>
+            <th style="width:50%">제목</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if question_list %}
+        {% for question in question_list %}
+        <tr class="text-center">
+            <td>
+                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
+                {{ question_list.paginator.count|sub:question_list.start_index|sub:forloop.counter0|add:1 }}
+            </td>
+            <td>
+                {% if question.voter.all.count > 0 %}
+                <span class="badge badge-warning px-2 py-1">{{ question.voter.all.count }}</span>
+                {% endif %}
+            </td>
+            <td class="text-left">
+                <a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a>
+                {% if question.answer_set.count > 0 %}
+                <span class="text-danger small ml-2">{{ question.answer_set.count }}</span>
+                {% endif %}
+            </td>
+            <td>{{ question.create_date }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">질문이 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if question_list.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?question_page={{ question_list.previous_page_number }}&answer_page={{ answer_list.number }}&comment_page={{ comment_list.number }}">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>
+        {% endif %}
+        <!-- 페이지리스트 -->
+        {% for page_number in question_list.paginator.page_range %}
+        {% if page_number >= question_list.number|add:-5 and page_number <= question_list.number|add:5 %}
+            {% if page_number == question_list.number %}
+            <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?question_page={{ page_number }}&answer_page={{ answer_list.number }}&comment_page={{ comment_list.number }}">{{ page_number }}</a>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?question_page={{ page_number }}&answer_page={{ answer_list.number }}&comment_page={{ comment_list.number }}">{{ page_number }}</a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if question_list.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?question_page={{ question_list.next_page_number }}&answer_page={{ answer_list.number }}&comment_page={{ comment_list.number }}">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <h4 class="border-bottom py-2">작성한 답변</h4>
+    <table class="table">
+        <thead>
+        <tr class="text-center thead-dark">
+            <th>번호</th>
+            <th>추천</th>
+            <th style="width:30%">질문</th>
+            <th style="width:30%">답변</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if answer_list %}
+        {% for answer in answer_list %}
+        <tr class="text-center">
+            <td>
+                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
+                {{ answer_list.paginator.count|sub:answer_list.start_index|sub:forloop.counter0|add:1 }}
+            </td>
+            <td>
+                {% if answer.voter.all.count > 0 %}
+                <span class="badge badge-warning px-2 py-1">{{ answer.voter.all.count }}</span>
+                {% endif %}
+            </td>
+            <td class="text-left">
+                <a href="{% url 'pybo:detail' answer.question.id %}#answer_{{ answer.id }}">{{ answer.question.subject }}</a>
+                {% if answer.question.answer_set.count > 0 %}
+                <span class="text-danger small ml-2">{{ answer.question.answer_set.count }}</span>
+                {% endif %}
+            </td>
+            <td>{{ answer.content }}</td>
+            <td>{{ answer.create_date }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">답변이 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if answer_list.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?answer_page={{ answer_list.previous_page_number }}&question_page={{ question_list.number }}&comment_page={{ comment_list.number }}">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>
+        {% endif %}
+        <!-- 페이지리스트 -->
+        {% for page_number in answer_list.paginator.page_range %}
+        {% if page_number >= answer_list.number|add:-5 and page_number <= answer_list.number|add:5 %}
+            {% if page_number == answer_list.number %}
+            <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?answer_page={{ page_number }}&question_page={{ question_list.number }}&comment_page={{ comment_list.number }}">{{ page_number }}</a>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?answer_page={{ page_number }}&question_page={{ question_list.number }}&comment_page={{ comment_list.number }}">{{ page_number }}</a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if answer_list.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?answer_page={{ answer_list.next_page_number }}&question_page={{ question_list.number }}&comment_page={{ comment_list.number }}">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <h4 class="border-bottom py-2">작성한 댓글</h4>
+    <table class="table">
+        <thead>
+        <tr class="text-center thead-dark">
+            <th>번호</th>
+            <th style="width:24%">질문</th>
+            <th style="width:24%">답변</th>
+            <th style="width:24%">내용</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if comment_list %}
+        {% for comment in comment_list %}
+        <tr class="text-center">
+            <td>
+                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
+                {{ comment_list.paginator.count|sub:comment_list.start_index|sub:forloop.counter0|add:1 }}
+            </td>
+            <td class="text-left">
+                <a href="{% url 'pybo:detail' comment.answer.question.id %}">{{ comment.answer.question.subject }}</a>
+                {% if comment.answer.question.answer_set.count > 0 %}
+                <span class="text-danger small ml-2">{{ comment.answer.question.answer_set.count }}</span>
+                {% endif %}
+            </td>
+            <td> {{ comment.answer.content }} </td>
+            <td> {{ comment.content }} </td>
+            <td> {{ comment.create_date }} </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">댓글이 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if comment_list.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?comment_page={{ comment_list.previous_page_number }}&question_page={{ question_list.number }}&answer_page={{ answer_list.number }}">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>
+        {% endif %}
+        <!-- 페이지리스트 -->
+        {% for page_number in comment_list.paginator.page_range %}
+        {% if page_number >= comment_list.number|add:-5 and page_number <= comment_list.number|add:5 %}
+            {% if page_number == comment_list.number %}
+            <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?comment_page={{ page_number }}&question_page={{ question_list.number }}&answer_page={{ answer_list.number }}">{{ page_number }}</a>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?comment_page={{ page_number }}&question_page={{ question_list.number }}&answer_page={{ answer_list.number }}">{{ page_number }}</a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if comment_list.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?comment_page={{ comment_list.next_page_number }}&question_page={{ question_list.number }}&answer_page={{ answer_list.number }}">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
